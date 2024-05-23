@@ -6,7 +6,7 @@ import requests
 from google.oauth2 import service_account
 from googleapiclient import discovery
 
-import gcp_orchestrator
+import gcp_commands
 
 SERVICE_ACCOUNT_FILE = 'utils/glassy-droplet-304915-566e6b23c2b2.json'
 PROJECT_ID = 'glassy-droplet-304915'
@@ -24,13 +24,14 @@ def calculate_distance(coord1, coord2):
     return np.sqrt((coord1[0] - coord2[0]) ** 2 + (coord1[1] - coord2[1]) ** 2)
 
 
-def assign_server_scores(customers, servers, previous_votes, weight=0.25):
+def assign_server_scores(customers, servers):
     server_coordinates = list(servers.values())
     server_keys = list(servers.keys())
 
-    # Apply weight to previous votes
-    for key in previous_votes:
-        previous_votes[key] *= weight
+    scores = {}
+
+    for key in server_keys:
+        scores[key] = 0
 
     for customer in customers:
         distances = [calculate_distance(customer, server) for index, server in enumerate(server_coordinates)]
@@ -39,26 +40,38 @@ def assign_server_scores(customers, servers, previous_votes, weight=0.25):
 
         for rank, idx in enumerate(sorted_indices):
             server_key = server_keys[idx]
-            previous_votes[server_key] += (1 / (rank + 1) ** 2) * (1 - weight)  # Weighted current votes
+            scores[server_key] += (1 / (rank + 1) ** 2)  # Weighted current votes
 
-    return previous_votes
+    return scores
 
 
 def get_server_coords():
-    with open('deployed_zones.json', 'r') as file:
+    with open('~/orchestrator_utils/deployed_zones.json', 'r') as file:
         data = json.load(file)
 
     return {region: (details["latitude"], details["longitude"]) for region, details in data.items()}
 
 
+def get_previous_server_scores():
+    file = open('~/orchestrator_utils/server_scores', 'r')
+    server_scores = json.load(file)
+    file.close()
+
+    return server_scores
+
+
+def get_server_scores():
+    ips = get_ips_from_nginx()
+
+    coords = ip_to_geolocation(ips)
+
+    server_coords = get_server_coords()
+
+    return assign_server_scores(coords,server_coords)
+
+
 def get_server_scores_from_servers(ips):
-    #TODO
-    print("fdvbndjbd")
-
-
-def send_server_scores_to_server(ip):
-    #TODO
-    print("fedgs")
+    pass
 
 
 def ip_to_geolocation(ip_address):
@@ -86,10 +99,3 @@ def get_ips_from_nginx():
                 ips.append(match)
 
     return ips
-
-
-if __name__ == "__main__":
-    gcp_orchestrator.add_caching_server("us-west4-b", 'network-lb')
-
-    with open('utils/gcp_regions.json', 'r') as file:
-        regions = json.load(file)
