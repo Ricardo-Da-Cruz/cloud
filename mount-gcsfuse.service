@@ -1,0 +1,12 @@
+[Unit]
+Description=Mount GCS Fuse at startup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mount -t gcsfuse -o allow_other,file_mode=777,dir_mode=777 site-storage /mnt/gcp-bucket
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

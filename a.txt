@@ -5,3 +5,11 @@
 #mount the gcp bucket
 
 sudo mount -t gcsfuse -o allow_other,file_mode=777,dir_mode=777 site-storage /mnt/gcp-bucket
+
+#enable a service that mounts the bucket on startup
+
+sudo systemctl daemon-reload
+sudo systemctl enable mount-gcsfuse.service
+
+#get health status of backend service
+gcloud compute backend-services get-health mybackendservice
