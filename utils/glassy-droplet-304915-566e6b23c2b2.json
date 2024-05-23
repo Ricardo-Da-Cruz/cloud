@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "glassy-droplet-304915",
+  "private_key_id": "566e6b23c2b20d54284d484b1d5d9ebf7230af98",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDTuOSyV/i1EEvo\n/8kMM/EvDJfAxSjW5LfNh3lo09PhSPoQaEW02xQlFSNxu8FiuUAnfPmep5g1XzLb\n3f4+4rUHq44F0tjCvWzIE/JRQQep4YnV+ApdwOABLmkqPQAQ7VyL8QKa6IjseyDe\nYxAaNBL3JB2Dz8trCSanDQXIXLcq9fmHd5WKoRZvYAZSS2fy14y+ImtByPiB6qOE\nqng+WbrwMOzwllxpNcf5KcnROH+89nbp/tR/vV+0hhxZjCFoXQH7Nqmg3X/PX00t\nSR6ObLWGzk3nQ5fg05+G3yYPd4xsl9gixAzcibvruMbq6S71aFZSg+2LRqKfh5FU\n17Zifb9FAgMBAAECggEAZTrnJhqH0NLM6Me78fi33b4QpNvf7feHpl6a/zMhAHtr\nDQM+KP4CwMQ9oTibez+F3BuWInSRgxtUbunSkXDGC7fL/R7WAy6c34EiABWuu1wa\nElM5aaA5unbdU5O8/1ruP/7pNvXt2dv5WDtXTKAPXVlIP2jQIwpKD99bH3StI31+\n7ytJCJKhPL9MXxjcDr6Qrf52uBbj/gjtpOwttpQmDvXwSql9oiUHwPHT0TbTsYb/\nTFSvO1cxpF30BRroR8RQkGCnRypRwQoIpay35Iuseq8RJ83ZCOCdO9ZQhGJqDN2A\nzFUlqykHAQqBQihr7BZG9S+HlgMr327HLwfyHK9XdQKBgQD9yAIE8s02/MJBdzgb\nEZMLz2AGbJH2SYRoSwAPRlcEWY8fnmycmP+D7xupOfonHghnrlyWlPf6PFSXv+j4\nEXCOXqOO9fEvrIsaMCwJ00ft8/Mn2BsAH+jdGFynka4hBdDpWN8C55TVvv/34kho\n2pWU2XMkpHFLUOFDvitkm86IpwKBgQDVksCecSeXEY4Q0KxiZOshh5Lp2UMZajgj\n3GSLiX/Hd13HRTlTnaK4bRe4d3U0/VFhhCpJ4J7on17uPCKEWoFcBRKONt3UI/EU\n95iUMZnPu3raUXj+LiqKQKoltnxRWpuWMFHT4Oss/WHOamHM8FB0oeLOn9DCPIxZ\nz+a/ny4KMwKBgQCBIH12ixxDuEQXD1Qq4bxSLAgN/Lwf9rQ6ZL75Bq9L9U3PpspY\nu7h3JviKGIfh03QvXRabP90VJBFezTT609TTe+/408cOnNqCTrR5o1lcB95XDaxf\nWd0gcj7ivEs/Xjg4IxIF5lNilrajKC3zvBSUEjh2En3a9qJH18E4hdaGzQKBgAVe\n21kgn049MsVZefw/bWo6bodS300UTrUYJa8clgn+Bm2sX/SqUh0xIReSaXAbrqA1\nIpsY+uX+m/SBrpyFahtWRVEuMAXVoYpVb5DKboO6wywaQGCj6I3xclXgcN/a126/\naE9bqI5JENyP8EWnBV7pczqe6jD4NM9NWxAWgKHhAoGAK8+P63xwMtazQDN6xovM\n9cViyIhJnf2BBYfrjJQCvZalaWpyYc9WQEPhlecFE/5tVpGo2ogvdqItL2KcqZUa\nF+c6i+uZ3qxXURLgSgIPa0FZkRmQiH0TVsDFpuyrgsuEvXH22PN4IR9iQtc3ozp2\n7RkywbsAyGOKFjqlhtD6/QA=\n-----END PRIVATE KEY-----\n",
+  "client_email": "auto-scaler@glassy-droplet-304915.iam.gserviceaccount.com",
+  "client_id": "104872187567920364062",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/auto-scaler%40glassy-droplet-304915.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
