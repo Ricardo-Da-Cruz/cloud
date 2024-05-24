@@ -7,7 +7,7 @@ from googleapiclient import discovery
 
 import concurrent.futures
 
-SERVICE_ACCOUNT_FILE = 'utils/glassy-droplet-304915-566e6b23c2b2.json'
+SERVICE_ACCOUNT_FILE = 'utils/key.json'
 PROJECT_ID = 'glassy-droplet-304915'
 IMAGE_NAME = 'caching-server-image'
 INSTANCE_NAME = 'new-instance-name'

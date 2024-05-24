@@ -4,7 +4,7 @@ from googleapiclient.discovery import build
 
 PROJECT_ID = 'glassy-droplet-304915'
 VPC_NETWORK = 'default'
-SERVICE_ACCOUNT_FILE = 'utils/glassy-droplet-304915-566e6b23c2b2.json'
+SERVICE_ACCOUNT_FILE = 'utils/key.json'
 # this script enables private google access to every region subnet so that the vms can have access to the bucket without
 # needing an external IP address. This can save on the billing for external IPs for the VMs
 
