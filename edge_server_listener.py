@@ -1,30 +1,10 @@
 import json
 import socket
+from collections import Counter
 
 import a
 import gcp_commands
-
-
-def get_response():
-    ips = a.get_ips_from_nginx()
-
-    coords = []
-
-    for ip in ips:
-        coords.append(a.ip_to_geolocation(ip))
-
-    print(coords)
-
-    servers = a.get_server_coords()
-
-    file = open('~/orchestrator_utils/server_scores', 'r')
-    server_scores = file.readlines()
-    file.close()
-
-    a.assign_server_scores(coords, servers)
-
-    file = open('~/orchestrator_utils/server_scores', 'w')
-    file.writelines(servers)
+import concurrent.futures
 
 
 def start_region_server(host, port=5000):
@@ -51,12 +31,12 @@ def start_region_server(host, port=5000):
 
                         ips = gcp_commands.get_vm_ips(gcp_commands.PROJECT_ID, region)
 
-                        connection.sendall(json.load(a.get_server_scores_from_servers(ips)))
+                        connection.sendall(json.dumps(get_server_scores_from_servers(ips)).encode())
 
                     if data == "send_server_scores":
                         scores = a.get_server_scores()
 
-                        connection.sendall(json.load(scores))
+                        connection.sendall(json.dumps(scores).encode())
 
                     connection.sendall("received".encode())
                 else:
@@ -67,13 +47,24 @@ def start_region_server(host, port=5000):
             connection.close()
 
 
-def send_requests_to_ips(ips, message, port=5000):
-    for ip in ips:
-        try:
-            with socket.create_connection((ip, port), timeout=10) as sock:
-                print(f'Sending to {ip}: {message}')
-                sock.sendall(message.encode())
-                response = sock.recv(16)
-                print(f'Received from {ip}: {response.decode()}')
-        except Exception as e:
-            print(f'Failed to connect to {ip}: {e}')
+def get_server_scores_from_servers(ips):
+    servers = a.get_server_scores()
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = [executor.submit(send_requests_to_ip, ip, "send_server_scores", 5000) for ip in ips]
+
+    for future in concurrent.futures.as_completed(results):
+        servers = dict(Counter(servers) + Counter(future.result()))
+
+    return servers
+
+
+def send_requests_to_ip(ip, message, port=5000):
+    try:
+        with socket.create_connection((ip, port), timeout=10) as sock:
+            print(f'Sending to {ip}: {message}')
+            sock.sendall(message.encode())
+            response = sock.recv(16)
+            return json.loads(response.decode())
+    except Exception as e:
+        print(f'Failed to connect to {ip}: {e}')

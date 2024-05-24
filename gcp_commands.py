@@ -275,12 +275,11 @@ def orchestrate(new_servers, old_servers):
     removing = [item for item in old_servers if item not in new_servers]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Schedule the adding tasks
         add_futures = [
             executor.submit(
                 create_managed_instance_group,
                 f"cdn-{group}",
-                group,  # Assuming region is the same as group for demonstration
+                group,
                 size=1,
                 health_check='scaling-group-health-check',
                 min_replicas=1,
@@ -296,4 +295,5 @@ def orchestrate(new_servers, old_servers):
             except Exception as e:
                 print(f"An error occurred: {e}")
 
-        remove_futures = [executor.submit(delete_managed_instance_group, "cdn-" + group, group) for group in removing]
+        for group in removing:
+            executor.submit(delete_managed_instance_group, "cdn-" + group, group)

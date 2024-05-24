@@ -44,14 +44,14 @@ def assign_server_scores(customers, servers):
 
 
 def get_server_coords():
-    with open('~/orchestrator_utils/deployed_zones.json', 'r') as file:
+    with open('~/utils/gcp_region.json', 'r') as file:
         data = json.load(file)
 
     return {region: (details["latitude"], details["longitude"]) for region, details in data.items()}
 
 
 def get_previous_server_scores():
-    file = open('~/orchestrator_utils/server_scores', 'r')
+    file = open('~/utils/server_scores', 'r')
     server_scores = json.load(file)
     file.close()
 
@@ -61,15 +61,16 @@ def get_previous_server_scores():
 def get_server_scores():
     ips = get_ips_from_nginx()
 
-    coords = ip_to_geolocation(ips)
+    coords = []
+
+    #TODO paralelize
+
+    for ip in ips:
+        coords.append(ip_to_geolocation(ip))
 
     server_coords = get_server_coords()
 
-    return assign_server_scores(coords,server_coords)
-
-
-def get_server_scores_from_servers(ips):
-    pass
+    return assign_server_scores(coords, server_coords)
 
 
 def ip_to_geolocation(ip_address):
