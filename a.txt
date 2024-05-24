@@ -1,7 +1,3 @@
-
-
-
-
 #mount the gcp bucket
 
 sudo mount -t gcsfuse -o allow_other,file_mode=777,dir_mode=777 site-storage /mnt/gcp-bucket

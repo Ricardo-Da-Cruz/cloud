@@ -1,3 +1,9 @@
+#this is the command service used to mount the bucket each time the server starts up
+#commands add it to startup
+#sudo systemctl daemon-reload
+#sudo systemctl enable mount-gcsfuse.service
+
+
 [Unit]
 Description=Mount GCS Fuse at startup
 After=network-online.target

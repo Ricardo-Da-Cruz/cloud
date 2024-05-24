@@ -1,12 +1,10 @@
 import json
-import os
-import subprocess
-import re
 import logging
-import requests
-
+import os
+import re
+import subprocess
 from math import radians, sin, cos, sqrt, atan2
-from google.cloud import compute_v1
+
 from google.oauth2 import service_account
 from googleapiclient import discovery
 
