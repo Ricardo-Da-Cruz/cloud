@@ -72,11 +72,11 @@ def get_server_scores():
 def ip_to_geolocation(ip_addresses):
     fields = ['lat', 'lon']
     try:
-        response = requests.post(f"http://ip-api.com/batch?fields={','.join(fields)}", json=json.load(ip_addresses))
+        response = requests.post(f"http://ip-api.com/batch?fields={','.join(fields)}", json=ip_addresses)
         response.raise_for_status()
     except requests.RequestException as err:
         print(f"Request failed: {err}")
-        return None
+        return []
 
     data = response.json()
     results = []

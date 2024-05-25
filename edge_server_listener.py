@@ -68,12 +68,13 @@ def send_requests_to_ip(ip, message, port=5000):
         with socket.create_connection((ip, port), timeout=10) as sock:
             print(f'Sending to {ip}: {message}')
             sock.sendall(message.encode())
-            response = sock.recv(1024)
+            response = sock.recv(2048)
             print(response.decode())
 
             return json.loads(response.decode())
     except Exception as e:
         print(f'Failed to connect to {ip}: {e}')
+        return {}
 
 
 if __name__ == "__main__":

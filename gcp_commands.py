@@ -275,10 +275,7 @@ def delete_managed_instance_group(instance_group_name, region):
         print(f"Failed to delete managed instance group {instance_group_name}.")
 
 
-def orchestrate(new_servers, old_servers):
-    adding = [item for item in new_servers if item not in old_servers]
-    removing = [item for item in old_servers if item not in new_servers]
-
+def orchestrate(adding, removing):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         add_futures = [
             executor.submit(
