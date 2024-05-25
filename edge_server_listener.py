@@ -2,7 +2,7 @@ import json
 import socket
 from collections import Counter
 
-import a
+import server_score_calculator
 import gcp_commands
 import concurrent.futures
 
@@ -29,12 +29,13 @@ def start_region_server(host, port=5000):
                     if data == "send_server_scores_in_region":
                         region = gcp_commands.get_gcp_region()
 
-                        ips = gcp_commands.get_vm_ips(gcp_commands.PROJECT_ID, region)
+                        ips = gcp_commands.get_vm_ips(region)
 
-                        connection.sendall(json.dumps(get_server_scores_from_servers(ips)).encode())
+                        connection.sendall(
+                            json.dumps(get_server_scores_from_servers(ips, "send_server_scores")).encode())
 
                     if data == "send_server_scores":
-                        scores = a.get_server_scores()
+                        scores = server_score_calculator.get_server_scores()
 
                         connection.sendall(json.dumps(scores).encode())
 
@@ -47,11 +48,11 @@ def start_region_server(host, port=5000):
             connection.close()
 
 
-def get_server_scores_from_servers(ips):
-    servers = a.get_server_scores()
+def get_server_scores_from_servers(ips, message):
+    servers = server_score_calculator.get_server_scores()
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = [executor.submit(send_requests_to_ip, ip, "send_server_scores", 5000) for ip in ips]
+        results = [executor.submit(send_requests_to_ip, ip, message, 5000) for ip in ips]
 
     for future in concurrent.futures.as_completed(results):
         servers = dict(Counter(servers) + Counter(future.result()))
@@ -68,3 +69,6 @@ def send_requests_to_ip(ip, message, port=5000):
             return json.loads(response.decode())
     except Exception as e:
         print(f'Failed to connect to {ip}: {e}')
+
+if __name__ == "__main__":
+    start_region_server("0.0.0.0")

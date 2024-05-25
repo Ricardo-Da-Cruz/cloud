@@ -36,10 +36,10 @@ def run_gcloud_command(command):
         return None
 
 
-def check_instance_group_exists(project_id, zone, instance_group_name):
+def check_instance_group_exists(zone, instance_group_name):
     command = [
         'gcloud', 'compute', 'instance-groups', 'list',
-        '--project', project_id,
+        '--project', PROJECT_ID,
         '--zones', zone,
         '--format=json'
     ]
@@ -52,17 +52,17 @@ def check_instance_group_exists(project_id, zone, instance_group_name):
     return False
 
 
-def create_instance_group(project_id, zone, instance_group_name, backend_service_name):
+def create_instance_group(zone, instance_group_name, backend_service_name):
     command = [
         'gcloud', 'compute', 'instance-groups', 'unmanaged', 'create', instance_group_name,
-        '--project', project_id,
+        '--project', PROJECT_ID,
         '--zone', zone
     ]
     run_gcloud_command(command)
 
     command = [
         'gcloud', 'compute', 'backend-services', 'add-backend', backend_service_name,
-        '--project', project_id,
+        '--project', PROJECT_ID,
         '--instance-group', instance_group_name,
         '--instance-group-zone', zone,
         '--global'
@@ -70,20 +70,20 @@ def create_instance_group(project_id, zone, instance_group_name, backend_service
     run_gcloud_command(command)
 
 
-def add_instance_to_group(project_id, zone, instance_group_name, instance_name):
+def add_instance_to_group(zone, instance_group_name, instance_name):
     command = [
         'gcloud', 'compute', 'instance-groups', 'unmanaged', 'add-instances', instance_group_name,
-        '--project', project_id,
+        '--project', PROJECT_ID,
         '--zone', zone,
         '--instances', instance_name
     ]
     run_gcloud_command(command)
 
 
-def create_instance_from_image(project_id, zone, instance_name, machine_image_name):
+def create_instance_from_image(zone, instance_name, machine_image_name):
     command = [
         'gcloud', 'compute', 'instances', 'create', instance_name,
-        '--project', project_id,
+        '--project', PROJECT_ID,
         '--zone', zone,
         '--source-machine-image', machine_image_name,
         '--no-address'
@@ -96,19 +96,19 @@ def add_caching_server(zone, lb_name):
     instance_group_name = "caching-group-" + zone
     instance_name = "ricardo-instance"
 
-    create_instance_from_image(PROJECT_ID, zone, instance_name, "caching-server-image")
+    create_instance_from_image(zone, instance_name, "caching-server-image")
 
-    if not check_instance_group_exists(PROJECT_ID, zone, instance_group_name):
-        create_instance_group(PROJECT_ID, zone, instance_group_name, lb_name)
+    if not check_instance_group_exists(zone, instance_group_name):
+        create_instance_group(zone, instance_group_name, lb_name)
 
-    add_instance_to_group(PROJECT_ID, zone, instance_group_name, instance_name)
+    add_instance_to_group(zone, instance_group_name, instance_name)
 
 
-def get_vm_ips(project_id, region):
+def get_vm_ips(region):
     try:
         command = [
             "gcloud", "compute", "instances", "list",
-            "--project", project_id,
+            "--project", PROJECT_ID,
             "--filter=zone:(" + region + ")",
             "--format=json"
         ]
@@ -141,15 +141,12 @@ def get_vm_ips(project_id, region):
 
 
 def get_gcp_region():
-    # Define the URL for the metadata server
     metadata_server_url = "http://169.254.169.254/computeMetadata/v1/instance/zone"
     headers = {"Metadata-Flavor": "Google"}
 
-    # Make a request to the metadata server to get the zone
     response = requests.get(metadata_server_url, headers=headers)
     if response.status_code == 200:
         zone = response.text
-        # Extract the region from the zone
         region = '-'.join(zone.split('/')[-1].split('-')[:-1])
         return region
     else:

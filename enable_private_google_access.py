@@ -9,11 +9,11 @@ SERVICE_ACCOUNT_FILE = 'utils/key.json'
 # needing an external IP address. This can save on the billing for external IPs for the VMs
 
 
-def enable_private_google_access(project_id, vpc_network, service_account_file):
+def enable_private_google_access(vpc_network, service_account_file):
     credentials = service_account.Credentials.from_service_account_file(service_account_file)
     service = build('compute', 'v1', credentials=credentials)
 
-    request = service.subnetworks().aggregatedList(project=project_id)
+    request = service.subnetworks().aggregatedList(project=PROJECT_ID)
     response = request.execute()
 
     for region, subnetworks in response['items'].items():
@@ -24,7 +24,7 @@ def enable_private_google_access(project_id, vpc_network, service_account_file):
                     print(f"Enabling Private Google Access for subnet: {subnetwork_name} in region: {region}")
 
                     request = service.subnetworks().setPrivateIpGoogleAccess(
-                        project=project_id,
+                        project=PROJECT_ID,
                         region=region.split('/')[-1],
                         subnetwork=subnetwork_name,
                         body={
@@ -37,4 +37,4 @@ def enable_private_google_access(project_id, vpc_network, service_account_file):
                     print(f"Private Google Access already enabled for subnet: {subnetwork['name']} in region: {region}")
 
 if __name__ == '__main__':
-    enable_private_google_access(PROJECT_ID, VPC_NETWORK, SERVICE_ACCOUNT_FILE)
+    enable_private_google_access(VPC_NETWORK, SERVICE_ACCOUNT_FILE)
