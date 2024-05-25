@@ -1,5 +1,6 @@
 import json
 import re
+from collections import deque
 
 import numpy as np
 import requests
@@ -61,39 +62,47 @@ def get_previous_server_scores():
 def get_server_scores():
     ips = get_ips_from_nginx()
 
-    coords = []
-
-    #TODO paralelize
-    for ip in ips:
-        coords.append(ip_to_geolocation(ip))
+    coords = ip_to_geolocation(ips)
 
     server_coords = get_server_coords()
 
     return assign_server_scores(coords, server_coords)
 
 
-def ip_to_geolocation(ip_address):
+def ip_to_geolocation(ip_addresses):
     fields = ['lat', 'lon']
     try:
-        response = requests.get(f"https://ip-api.com/json/{ip_address}?fields={','.join(fields)}")
+        response = requests.post(f"http://ip-api.com/batch?fields={','.join(fields)}", json=json.load(ip_addresses))
         response.raise_for_status()
     except requests.RequestException as err:
         print(f"Request failed: {err}")
         return None
 
     data = response.json()
-    return data['lat'], data['lon']
+    results = []
+    for item in data:
+        results.append(tuple(item.get(field, None) for field in fields))
+
+    return results
 
 
 def get_ips_from_nginx():
     ip_regex = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+    exclusion_string = "GoogleHC/1.0"
+    unique_ips = set()
+    ip_list = deque(maxlen=100)
 
-    ips = []
-
-    with open('/var/log/nginx/access.log', 'r') as file:
-        for line in file:
+    with open('/var/log/nginx/bucket_access.log', 'r') as file:
+        for line in reversed(list(file)):
+            if exclusion_string in line:
+                continue
             match = re.search(ip_regex, line)
             if match:
-                ips.append(match)
+                ip = match.group()
+                if ip not in unique_ips:
+                    unique_ips.add(ip)
+                    ip_list.appendleft(ip)
+                    if len(ip_list) >= 100:
+                        break
 
-    return ips
+    return list(ip_list)

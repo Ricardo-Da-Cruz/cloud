@@ -23,17 +23,22 @@ def start_region_server(host, port=5000):
             print(f'Connection from {client_address}')
 
             while True:
-                data = connection.recv(16)
-                print(f'Received: {data.decode()}')
+                data = connection.recv(16).decode()
+                print(f'Received: {data}')
                 if data:
-                    if data == "scores_in_region":
+                    if str(data) == "scores_in_region":
                         region = gcp_commands.get_gcp_region()
 
                         ips = gcp_commands.get_vm_ips(region)
 
-                        connection.sendall(
-                            json.dumps(get_server_scores_from_servers(ips, "send_server_scores",
-                                                                      server_score_calculator.get_server_scores())).encode())
+                        message = json.dumps(get_server_scores_from_servers(ips, "send_server_scores",
+                                                                            server_score_calculator.get_server_scores()))
+
+                        print(message)
+
+                        print(server_score_calculator.get_server_scores())
+
+                        connection.sendall(message.encode())
 
                     if data == "send_server_scores":
                         scores = server_score_calculator.get_server_scores()
@@ -63,7 +68,9 @@ def send_requests_to_ip(ip, message, port=5000):
         with socket.create_connection((ip, port), timeout=10) as sock:
             print(f'Sending to {ip}: {message}')
             sock.sendall(message.encode())
-            response = sock.recv(16)
+            response = sock.recv(1024)
+            print(response.decode())
+
             return json.loads(response.decode())
     except Exception as e:
         print(f'Failed to connect to {ip}: {e}')

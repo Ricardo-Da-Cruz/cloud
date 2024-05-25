@@ -1,4 +1,5 @@
 import json
+import socket
 import subprocess
 
 import requests
@@ -104,33 +105,41 @@ def add_caching_server(zone, lb_name):
     add_instance_to_group(zone, instance_group_name, instance_name)
 
 
+def get_current_server_private_ip():
+    try:
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        return local_ip
+    except Exception as e:
+        print(f"An error occurred while retrieving current server private IP: {e}")
+        return None
+
+
 def get_vm_ips(region):
     try:
         command = [
             "gcloud", "compute", "instances", "list",
             "--project", PROJECT_ID,
-            "--filter=zone:(" + region + ")",
+            f"--filter=status=RUNNING AND zone:({region})",
             "--format=json"
         ]
 
         result = run_gcloud_command(command)
 
-        if result:
+        if not result:
             return []
 
-        instances = json.loads(result)
+        instances = json.dumps(result)
+
+        local_ip = get_current_server_private_ip()
+        ips_to_exclude = {local_ip}
 
         ips = []
         for instance in instances:
             network_interfaces = instance.get('networkInterfaces', [])
             for interface in network_interfaces:
-                access_configs = interface.get('accessConfigs', [])
-                for config in access_configs:
-                    ip = config.get('natIP')
-                    if ip:
-                        ips.append(ip)
                 internal_ip = interface.get('networkIP')
-                if internal_ip:
+                if internal_ip and internal_ip not in ips_to_exclude:
                     ips.append(internal_ip)
 
         return ips
@@ -138,6 +147,7 @@ def get_vm_ips(region):
     except Exception as e:
         print(f"An error occurred: {e}")
         return []
+
 
 
 def get_gcp_region():
@@ -171,8 +181,6 @@ def create_managed_instance_group(instance_group_name, region, size=1,
                                   health_check='scaling-group-health-check',
                                   min_replicas=1, max_replicas=10, cpu_utilization=0.8):
     zones = get_zones_in_region(region)
-
-    print(f"zones: {zones}")
 
     command = [
         'gcloud', 'compute', 'instance-groups', 'managed', 'create', instance_group_name,
