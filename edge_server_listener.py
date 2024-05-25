@@ -26,20 +26,19 @@ def start_region_server(host, port=5000):
                 data = connection.recv(16)
                 print(f'Received: {data.decode()}')
                 if data:
-                    if data == "send_server_scores_in_region":
+                    if data == "scores_in_region":
                         region = gcp_commands.get_gcp_region()
 
                         ips = gcp_commands.get_vm_ips(region)
 
                         connection.sendall(
-                            json.dumps(get_server_scores_from_servers(ips, "send_server_scores")).encode())
+                            json.dumps(get_server_scores_from_servers(ips, "send_server_scores",
+                                                                      server_score_calculator.get_server_scores())).encode())
 
                     if data == "send_server_scores":
                         scores = server_score_calculator.get_server_scores()
 
                         connection.sendall(json.dumps(scores).encode())
-
-                    connection.sendall("received".encode())
                 else:
                     print('No more data from', client_address)
                     break
@@ -48,9 +47,7 @@ def start_region_server(host, port=5000):
             connection.close()
 
 
-def get_server_scores_from_servers(ips, message):
-    servers = server_score_calculator.get_server_scores()
-
+def get_server_scores_from_servers(ips, message, servers):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = [executor.submit(send_requests_to_ip, ip, message, 5000) for ip in ips]
 
@@ -62,6 +59,7 @@ def get_server_scores_from_servers(ips, message):
 
 def send_requests_to_ip(ip, message, port=5000):
     try:
+        print(f'Connecting to {ip}:{port}')
         with socket.create_connection((ip, port), timeout=10) as sock:
             print(f'Sending to {ip}: {message}')
             sock.sendall(message.encode())
@@ -69,6 +67,7 @@ def send_requests_to_ip(ip, message, port=5000):
             return json.loads(response.decode())
     except Exception as e:
         print(f'Failed to connect to {ip}: {e}')
+
 
 if __name__ == "__main__":
     start_region_server("0.0.0.0")

@@ -24,6 +24,10 @@ ips = ["35.219.166.30"]
 #     if result:
 #         ips.append(result[0])
 
-scores = get_server_scores_from_servers(ips, "send_server_scores_in_region")
 
+try:
+    scores = get_server_scores_from_servers(ips, "scores_in_region", {})
+except TimeoutError:
+    print("Timeout detected. Performing TCP dump for further analysis.")
+    perform_tcp_dump(duration=30, output_file="tcpdump_timeout")
 

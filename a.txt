@@ -9,3 +9,5 @@ sudo systemctl enable mount-gcsfuse.service
 
 #get health status of backend service
 gcloud compute backend-services get-health mybackendservice
+
+gcloud compute firewall-rules delete allow-tcp-5000
