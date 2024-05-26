@@ -39,7 +39,7 @@ adding = []
 removing = []
 
 for region, score in scores.items():
-    if score > THRESHOLD * (1 - (prices[region] - prices[min_price]) / (prices[max_price] - prices[min_price]) * 2):
+    if score * (1.1 - (prices[region] - prices[min_price]) / (prices[max_price] - prices[min_price]) * 2) > THRESHOLD:
         adding.append(score.keys())
     elif region in deployed_regions:
         removing.append(region)
