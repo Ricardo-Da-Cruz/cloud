@@ -11,7 +11,7 @@ import concurrent.futures
 
 SERVICE_ACCOUNT_FILE = 'utils/key.json'
 PROJECT_ID = 'glassy-droplet-304915'
-IMAGE_NAME = 'caching-server-image'
+IMAGE_NAME = 'edge-node-image'
 INSTANCE_NAME = 'new-instance-name'
 BACKEND_SERVICE_NAME = 'network-lb'
 CACHING_SERVER_TEMPLATE = 'caching-server-template'
@@ -97,7 +97,7 @@ def add_caching_server(zone, lb_name):
     instance_group_name = "caching-group-" + zone
     instance_name = "ricardo-instance"
 
-    create_instance_from_image(zone, instance_name, "caching-server-image")
+    create_instance_from_image(zone, instance_name, IMAGE_NAME)
 
     if not check_instance_group_exists(zone, instance_group_name):
         create_instance_group(zone, instance_group_name, lb_name)

@@ -9,7 +9,7 @@ from googleapiclient import discovery
 
 SERVICE_ACCOUNT_FILE = 'utils/key.json'
 PROJECT_ID = 'glassy-droplet-304915'
-IMAGE_NAME = 'caching-server-image'
+IMAGE_NAME = 'edge-node-image'
 INSTANCE_NAME = 'new-instance-name'
 
 CREDENTIALS = service_account.Credentials.from_service_account_file(
