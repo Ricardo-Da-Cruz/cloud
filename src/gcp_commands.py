@@ -1,4 +1,5 @@
 import json
+import re
 import socket
 import subprocess
 
@@ -27,7 +28,6 @@ def run_gcloud_command(command):
         print("executing command:")
         print(" ".join(command))
         result = subprocess.run(command, check=True, text=True, capture_output=True)
-        print(result.stdout)
         return result.stdout
     except subprocess.CalledProcessError as e:
         print(f"An error occurred: {e.stderr}")
@@ -116,37 +116,35 @@ def get_current_server_private_ip():
 
 
 def get_vm_ips(region):
-    try:
-        command = [
-            "gcloud", "compute", "instances", "list",
-            "--project", PROJECT_ID,
-            f"--filter=status=RUNNING AND zone:({region})",
-            "--format=json"
-        ]
 
-        result = run_gcloud_command(command)
+    command = [
+        "gcloud", "compute", "instances", "list",
+        "--project", PROJECT_ID,
+        f"--filter=status=RUNNING AND zone:({region})",
+        "--format=json"
+    ]
 
-        if not result:
-            return []
+    result = run_gcloud_command(command)
 
-        instances = json.dumps(result)
-
-        local_ip = get_current_server_private_ip()
-        ips_to_exclude = {local_ip}
-
-        ips = []
-        for instance in instances:
-            network_interfaces = instance.get('networkInterfaces', [])
-            for interface in network_interfaces:
-                internal_ip = interface.get('networkIP')
-                if internal_ip and internal_ip not in ips_to_exclude:
-                    ips.append(internal_ip)
-
-        return ips
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    if not result:
         return []
+
+    instances = json.loads(result)
+
+    local_ip = get_current_server_private_ip()
+    ips_to_exclude = {local_ip}
+
+    ips = []
+    for instance in instances:
+        network_interfaces = instance.get('networkInterfaces', [])
+        for interface in network_interfaces:
+            internal_ip = interface.get('networkIP')
+            if internal_ip and internal_ip not in ips_to_exclude:
+                ips.append(internal_ip)
+    print(ips)
+
+    return ips
+
 
 
 
@@ -175,6 +173,76 @@ def get_zones_in_region(region):
         zone_names = [zone.split('/')[-1] for zone in zones]
         return ",".join(zone_names)
     return []
+
+
+def create_router_with_nat(router_name, nat_name, region, network_name):
+    # Create the Cloud Router
+    router_command = [
+        'gcloud', 'compute', 'routers', 'create', router_name,
+        f'--project={PROJECT_ID}',
+        f'--region={region}',
+        f'--network={network_name}'
+    ]
+
+    print(f"Running command: {' '.join(router_command)}")
+
+    router_output = run_gcloud_command(router_command)
+
+    if router_output:
+        print(f"Router {router_name} created successfully in region {region}.")
+    else:
+        print(f"Failed to create router {router_name} in region {region}.")
+
+    # Create the NAT configuration
+    nat_command = [
+        'gcloud', 'compute', 'routers', 'nats', 'create', nat_name,
+        f'--router={router_name}',
+        f'--region={region}',
+        '--auto-allocate-nat-external-ips',
+        '--nat-all-subnet-ip-ranges'
+    ]
+
+    print(f"Running command: {' '.join(nat_command)}")
+
+    nat_output = run_gcloud_command(nat_command)
+
+    if nat_output:
+        print(f"NAT {nat_name} created successfully in region {region}.")
+    else:
+        print(f"Failed to create NAT {nat_name} in region {region}.")
+
+
+def delete_router_and_nat(router_name, nat_name, region):
+    # Delete the NAT configuration
+    nat_command = [
+        'gcloud', 'compute', 'routers', 'nats', 'delete', nat_name,
+        f'--project={PROJECT_ID}',
+        f'--router={router_name}',
+        f'--region={region}',
+        '--quiet'
+    ]
+
+    nat_output = run_gcloud_command(nat_command)
+
+    if nat_output:
+        print(f"NAT {nat_name} deleted successfully in region {region}.")
+    else:
+        print(f"Failed to delete NAT {nat_name} in region {region}.")
+
+    # Delete the Cloud Router
+    router_command = [
+        'gcloud', 'compute', 'routers', 'delete', router_name,
+        f'--project={PROJECT_ID}',
+        f'--region={region}',
+        '--quiet'
+    ]
+
+    router_output = run_gcloud_command(router_command)
+
+    if router_output:
+        print(f"Router {router_name} deleted successfully in region {region}.")
+    else:
+        print(f"Failed to delete router {router_name} in region {region}.")
 
 
 def create_managed_instance_group(instance_group_name, region, size=1,
@@ -241,6 +309,8 @@ def create_managed_instance_group(instance_group_name, region, size=1,
     else:
         print(f"Failed to add managed instance group {instance_group_name} to backend service {BACKEND_SERVICE_NAME}.")
 
+    create_router_with_nat("route_" + region, "nat_" + region,region,"default")
+
 
 def remove_instance_group_from_backend_service(instance_group_name, region):
     remove_command = [
@@ -274,6 +344,27 @@ def delete_managed_instance_group(instance_group_name, region):
     else:
         print(f"Failed to delete managed instance group {instance_group_name}.")
 
+    delete_router_and_nat("route_" + region, "nat_"+ region, region)
+
+
+def list_deployed_regions():
+    command = ["gcloud", "compute", "instance-groups", "list", "--format=value(name)"]
+    output = run_gcloud_command(command)
+
+    if output is None:
+        return []
+
+    instance_groups = []
+    print(output)
+    for line in output.strip().split("\n"):
+        instance_groups.append(line)
+
+    print(instance_groups)
+
+    pattern = re.compile(r"^cdn-(\w+-\w+)$")
+    filtered_groups = [match.group(1) for group in instance_groups if (match := pattern.match(group))]
+    return filtered_groups
+
 
 def orchestrate(adding, removing):
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -299,3 +390,5 @@ def orchestrate(adding, removing):
 
         for group in removing:
             executor.submit(delete_managed_instance_group, "cdn-" + group, group)
+
+
