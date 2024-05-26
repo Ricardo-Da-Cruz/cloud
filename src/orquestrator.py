@@ -50,7 +50,8 @@ deployed.extend(adding)
 
 if not deployed:
     adding.append(max(scores, key=lambda k: formula(scores[k], prices[k])))
-    removing.remove(max(scores, key=lambda k: formula(scores[k], prices[k])))
+    if max(scores, key=lambda k: formula(scores[k], prices[k])) in removing:
+        removing.remove(max(scores, key=lambda k: formula(scores[k], prices[k])))
 else:
     print("feds")
 
