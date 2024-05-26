@@ -14,7 +14,7 @@ PROJECT_ID = 'glassy-droplet-304915'
 IMAGE_NAME = 'edge-node-image'
 INSTANCE_NAME = 'new-instance-name'
 BACKEND_SERVICE_NAME = 'network-lb'
-CACHING_SERVER_TEMPLATE = 'caching-server-template'
+CACHING_SERVER_TEMPLATE = 'edge-node-template'
 
 CREDENTIALS = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE,
@@ -266,8 +266,6 @@ def create_managed_instance_group(instance_group_name, region, size=1,
         '--list-managed-instances-results=PAGELESS'
     ]
 
-    print(command)
-
     output = run_gcloud_command(command)
 
     if output:
@@ -309,7 +307,7 @@ def create_managed_instance_group(instance_group_name, region, size=1,
     else:
         print(f"Failed to add managed instance group {instance_group_name} to backend service {BACKEND_SERVICE_NAME}.")
 
-    create_router_with_nat("route_" + region, "nat_" + region,region,"default")
+    create_router_with_nat("route-" + region, "nat-" + region,region,"default")
 
 
 def remove_instance_group_from_backend_service(instance_group_name, region):
@@ -344,7 +342,7 @@ def delete_managed_instance_group(instance_group_name, region):
     else:
         print(f"Failed to delete managed instance group {instance_group_name}.")
 
-    delete_router_and_nat("route_" + region, "nat_"+ region, region)
+    delete_router_and_nat("route-" + region, "nat-" + region, region)
 
 
 def list_deployed_regions():
@@ -390,5 +388,3 @@ def orchestrate(adding, removing):
 
         for group in removing:
             executor.submit(delete_managed_instance_group, "cdn-" + group, group)
-
-

@@ -4,47 +4,19 @@ from concurrent import futures
 import gcp_commands
 import server_score_calculator
 from edge_server_listener import get_server_scores_from_servers
-from google.cloud import storage
-from google.oauth2 import service_account
 
 THRESHOLD = 12
 
 
-def get_deployed_regions():
-    bucket_name = 'orchestrator-utils'
-    blob_name = 'deployed_regions.json'
-
-    credentials = service_account.Credentials.from_service_account_file("utils/key.json")
-
-    client = storage.Client(credentials=credentials, project="glassy-droplet-304915")
-
-    # Get the bucket and blob
-    bucket = client.get_bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-
-    content = blob.download_as_text()
-
-    data = json.loads(content)
-
-    return data
+def formula(value, price):
+    return value / price
 
 
-def upload_deployed_regions(data):
-    bucket_name = 'orchestrator-utils'
-    blob_name = 'deployed_regions.json'
+with open("utils/prices.json", 'r') as file:
+    prices = json.load(file)
 
-    credentials = service_account.Credentials.from_service_account_file("utils/key.json")
-
-    client = storage.Client(credentials=credentials, project="glassy-droplet-304915")
-
-    # Get the bucket and blob
-    bucket = client.get_bucket(bucket_name)
-    blob = bucket.blob(blob_name)
-
-    # Convert the data back to JSON and upload it
-    content = json.dumps(data, indent=2)
-    blob.upload_from_string(content, content_type='application/json')
-
+max_price = max(prices, key=prices.get)
+min_price = min(prices, key=prices.get)
 
 deployed_regions = gcp_commands.list_deployed_regions()
 
@@ -67,22 +39,22 @@ adding = []
 removing = []
 
 for region, score in scores.items():
-    if score > THRESHOLD:
+    if score > THRESHOLD * (1 - (prices[region] - prices[min_price]) / (prices[max_price] - prices[min_price]) * 2):
         adding.append(score.keys())
     elif region in deployed_regions:
         removing.append(region)
 
 deployed = [item for item in deployed_regions if item not in removing]
 
-if not deployed:
-    adding.append(max(scores, key=scores.get))
+deployed.extend(adding)
 
-deployed.append(adding)
-upload_deployed_regions(deployed)
+if not deployed:
+    adding.append(max(scores, key=lambda k: formula(scores[k], prices[k])))
+    removing.remove(max(scores, key=lambda k: formula(scores[k], prices[k])))
+else:
+    print("feds")
 
 print("adding: " + str(adding))
 print("removing: " + str(removing))
 
 gcp_commands.orchestrate(adding, removing)
-
-regions = get_deployed_regions()
